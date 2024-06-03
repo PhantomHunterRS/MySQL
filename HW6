@@ -1,0 +1,35 @@
+USE lesson_4;
+DROP TABLE  IF EXISTS lesson_4.user_old;
+CREATE TABLE user_old
+  AS (SELECT * FROM lesson_4.users);
+
+DELIMITER $$
+CREATE PROCEDURE RECHANGE (user_id BIGINT)
+BEGIN
+    START TRANSACTION;
+    CREATE TEMPORARY TABLE lesson_4.one_User AS (SELECT * FROM lesson_4.users WHERE id = user_id);
+    DELETE FROM lesson_4.users WHERE id = user_id;
+    INSERT INTO lesson_4.user_old SELECT * FROM lesson_4.one_User;
+    DROP TABLE lesson_4.one_User;
+    COMMIT;
+END $$;
+DELIMITER ;
+SET @userID :=8;
+CALL RECHANGE(@userID);
+
+DELIMITER $$
+CREATE FUNCTION GOODMORNING(timeX TIME)
+RETURNS VARCHAR(15)
+DETERMINISTIC
+BEGIN
+	DECLARE answer  VARCHAR(15);
+	IF timeX >= TIME_FORMAT('6:00:01', '%H:%i:%S') AND  timeX <=TIME_FORMAT('12:00:00','%H:%i:%S') THEN SET answer = 'Доброе утро'; 
+	ELSEIF (timeX >= TIME_FORMAT('12:00:01', '%H:%i:%S') AND timeX <= TIME_FORMAT('18:00:00', '%H:%i:%S')) THEN SET answer = 'Добрый день'; 
+    ELSEIF (timeX >= TIME_FORMAT('18:00:01', '%H:%i:%S') AND timeX <= TIME_FORMAT('0:00:00', '%H:%i:%S')) THEN SET answer = 'Добрый вечер';
+	ELSEIF (timeX >= TIME_FORMAT('0:00:00', '%H:%i:%S') AND timeX <= TIME_FORMAT('6:00:00', '%H:%i:%S')) THEN SET answer = 'Доброй ночи';
+    END IF;
+    RETURN answer;
+END $$;
+DELIMITER ;
+
+SELECT GOODMORNING("5:00:00");
